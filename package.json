@@ -1,0 +1,10 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "客户档案管家 - 云函数后端(全部接口,兼容微信云开发与腾讯云CloudBase)",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "@cloudbase/node-sdk": "^2.9.1"
+  }
+}

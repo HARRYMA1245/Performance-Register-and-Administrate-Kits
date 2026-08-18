@@ -1,0 +1,28 @@
+/* pages/form/form.wxss */
+.topbar { display: flex; flex-direction: column; }
+.topbar-title { font-size: 32rpx; font-weight: 700; }
+
+/* 工作进度清单 */
+.prog-count {
+  font-size: 30rpx; font-weight: 700; color: #1f6feb;
+  background: #eaf0ff; border-radius: 999rpx; padding: 4rpx 20rpx;
+}
+.prog-count.full { color: #fff; background: #1c8a4f; }
+.prog-row {
+  display: flex; align-items: center; gap: 18rpx;
+  padding: 20rpx 16rpx;
+  border-top: 1rpx solid #eceef4;
+}
+.prog-row:active { background: #f4f7ff; }
+.prog-row.done .prog-label { color: #1c8a4f; }
+.prog-check {
+  width: 40rpx; height: 40rpx; border-radius: 50%;
+  border: 2rpx solid #c4cbd9;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26rpx; color: #fff;
+  flex-shrink: 0; box-sizing: border-box;
+}
+.prog-check.on { background: #1c8a4f; border-color: #1c8a4f; }
+.prog-label { flex: 1; font-size: 30rpx; color: #1f2328; }
+.prog-state { font-size: 22rpx; color: #98a0b3; }
+.prog-row.done .prog-state { color: #1c8a4f; }

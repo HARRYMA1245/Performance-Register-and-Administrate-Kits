@@ -1,0 +1,9 @@
+/* pages/entry/entry.wxss */
+.hero { text-align: center; padding: 50rpx 0; }
+.hero .logo { width: 130rpx; height: 130rpx; line-height: 130rpx; margin: 0 auto; background: #1f6feb; color: #fff; border-radius: 32rpx; font-size: 70rpx; box-shadow: 0 12rpx 28rpx rgba(31,111,235,0.35); }
+.hero .title { font-size: 36rpx; font-weight: 700; margin-top: 24rpx; }
+.hero .muted { color: #8a93a6; font-size: 24rpx; margin-top: 8rpx; }
+.kv { display: flex; justify-content: space-between; padding: 14rpx 0; border-top: 1rpx solid #eceef4; font-size: 28rpx; }
+.kv:first-of-type { border-top: 0; }
+.kv .k { color: #6f7689; }
+.kv .v { color: #1f2328; font-weight: 500; }

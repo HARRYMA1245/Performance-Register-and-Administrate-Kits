@@ -4,11 +4,488 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1f6feb">
-<title>开卡客户档案管家</title>
-<link rel="stylesheet" href="style.css?v=4">
+<title>客户档案管家 · H5预览版</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app"></div>
-<script src="app.js?v=4"></script>
+
+<!-- 模板 -->
+<template id="tpl-home">
+  <div class="page">
+    <div class="hero">
+      <div class="logo">📒</div>
+      <div class="hero-title">客户档案管家</div>
+      <div class="hero-sub">团队协作 · 客户跟进 · 数据沉淀</div>
+    </div>
+
+    <div class="card role-card">
+      <div class="title">我是员工</div>
+      <div class="desc">录入客户资料、跟进记录、保存与上传自己的档案</div>
+      <div class="inline-form" id="staffNameForm" style="display:none;margin-bottom:12px">
+        <input id="staffNameInput" placeholder="请输入你的姓名（如：张丽）" style="flex:1;background:#f7f8fb;border:1px solid #e3e6ee;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit" />
+        <button class="btn btn-primary" style="flex:0;width:80px" id="staffNameConfirm">确认</button>
+      </div>
+      <div id="staffNameError" style="display:none;color:#e54848;font-size:12px;margin-bottom:8px;text-align:left"></div>
+      <button class="btn btn-primary btn-block" data-action="enterStaff">进入工作台</button>
+    </div>
+
+    <div class="card role-card">
+      <div class="title">我是管理员</div>
+      <div class="desc">查看团队业绩、客户详情、导出全量 CSV</div>
+      <button class="btn btn-ghost btn-block" data-action="enterManager">进入管理后台</button>
+    </div>
+
+    <div class="card">
+      <div class="section-title">二维码/链接进入</div>
+      <p class="muted" style="line-height:1.7">
+        管理员在「员工入口」页可生成带身份参数的二维码/链接。访问
+        <code>preview/index.html?role=staff&sid=S001&sname=张丽</code>
+        会自动定位到员工身份并打开新建表单。
+      </p>
+      <button class="btn btn-ghost btn-block" data-action="simulateQrStaff">模拟员工扫码进入(张丽)</button>
+      <button class="btn btn-ghost btn-block" data-action="simulateQrAdmin" style="margin-top:12rpx">模拟管理员扫码进入</button>
+    </div>
+
+    <div class="card">
+      <div class="section-title">数据存储说明</div>
+      <p class="muted" style="line-height:1.7">
+        所有数据保存在你浏览器的 localStorage,关掉页面不影响。
+        员工可导出自己的 CSV,管理员可一键导出全量数据。
+      </p>
+      <button class="btn btn-ghost btn-block" data-action="resetData" style="margin-top:12rpx">重置演示数据</button>
+    </div>
+
+    <div class="card">
+      <div class="section-title">添加到桌面</div>
+      <p class="muted" style="line-height:1.7">
+        在浏览器菜单中选择「添加到主屏幕」,即可像 App 一样使用本工具。
+        微信小程序版可使用右上角「···」→「添加到桌面」。
+      </p>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-staff">
+  <div class="page staff-page">
+    <div class="profile">
+      <div class="avatar" id="staffInitial"></div>
+      <div>
+        <div class="name" id="staffName"></div>
+        <div class="muted">员工 · <span id="staffId"></span></div>
+      </div>
+      <button class="mini-btn" data-action="logout">退出登录</button>
+    </div>
+
+    <!-- Tab Content Area -->
+    <div class="tab-content" id="tabFill" style="display:block">
+      <!-- ========== 填报 TAB ========== -->
+      <div class="card" style="padding:14px 18px">
+        <div class="section-title" style="margin-bottom:4px">新建客户档案</div>
+        <div class="muted" style="margin-bottom:10px">四分区表单 · 大输入框 · 手机端优化</div>
+      </div>
+
+      <!-- 分区1: 客户基础信息 -->
+      <div class="card form-card">
+        <div class="form-section-header"><span class="fs-num">1</span>客户基础信息</div>
+        <div class="two-col">
+          <div class="form-row"><label class="flabel">姓名 <span class="req">*</span></label>
+            <input class="finput" data-key="name" data-group="basic" placeholder="客户姓名" />
+          </div>
+          <div class="form-row"><label class="flabel">客户号 <span class="req">*</span></label>
+            <input class="finput" data-key="clientNo" data-group="basic" placeholder="如 K2025001" />
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="form-row"><label class="flabel">托管金额 (¥)</label>
+            <input class="finput" data-key="managedAmount" data-group="basic" placeholder="如 500000" type="number" />
+          </div>
+          <div class="form-row"><label class="flabel">经办人 <span class="req">*</span></label>
+            <input class="finput" data-key="handler" data-group="basic" placeholder="经办人姓名" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 分区2: 时间节点信息 -->
+      <div class="card form-card">
+        <div class="form-section-header"><span class="fs-num">2</span>时间节点信息</div>
+        <div class="two-col">
+          <div class="form-row"><label class="flabel">登记日期</label>
+            <input class="finput" type="date" data-key="registerDate" data-group="timeNodes" />
+          </div>
+          <div class="form-row"><label class="flabel">开卡日期</label>
+            <input class="finput" type="date" data-key="cardDate" data-group="timeNodes" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="flabel">预计入账日期</label>
+          <input class="finput" type="date" data-key="expectedDepositDate" data-group="timeNodes" />
+        </div>
+        <div class="form-row">
+          <label class="flabel">入账描述</label>
+          <textarea class="finput ftextarea" data-key="depositDesc" data-group="timeNodes" placeholder="如 理财到期转入 · 他行资金归集 · 预计金额 200万"></textarea>
+        </div>
+      </div>
+
+      <!-- 分区3: 获客与转介信息 -->
+      <div class="card form-card">
+        <div class="form-section-header"><span class="fs-num">3</span>获客与转介信息</div>
+        <div class="two-col">
+          <div class="form-row"><label class="flabel">获客方式</label>
+            <select class="finput" data-key="channel" data-group="acquisition">
+              <option value="">请选择</option>
+              <option>陌拜</option><option>电销</option><option>微信</option>
+              <option>抖音/快手</option><option>小红书</option><option>转介绍</option>
+              <option>渠道合作</option><option>营业厅到访</option><option>其他</option>
+            </select>
+          </div>
+          <div class="form-row"><label class="flabel">获客人</label>
+            <input class="finput" data-key="acquirer" data-group="acquisition" placeholder="获客员工姓名" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="flabel">转介理财经理</label>
+          <input class="finput" data-key="referralManager" data-group="acquisition" placeholder="转介绍方理财经理姓名" />
+        </div>
+        <div class="two-col">
+          <div class="form-row"><label class="flabel">认领状态</label>
+            <select class="finput" data-key="claimStatus" data-group="acquisition">
+              <option value="">请选择</option>
+              <option>已认领</option><option>未认领</option><option>无需认领</option>
+            </select>
+          </div>
+          <div class="form-row"><label class="flabel">认领日期</label>
+            <input class="finput" type="date" data-key="claimDate" data-group="acquisition" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 分区4: 状态与留存明细 -->
+      <div class="card form-card">
+        <div class="form-section-header"><span class="fs-num">4</span>状态与留存明细</div>
+        <div class="two-col">
+          <div class="form-row"><label class="flabel">当前状态</label>
+            <select class="finput" data-key="currentStatus" data-group="status">
+              <option value="">请选择</option>
+              <option>已签约</option><option>高意向</option><option>跟进中</option>
+              <option>已流失</option><option>观望中</option>
+            </select>
+          </div>
+          <div class="form-row"><label class="flabel">AUM (¥)</label>
+            <input class="finput" data-key="aum" data-group="status" placeholder="资产管理规模" type="number" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="flabel">留存产品类型</label>
+          <input class="finput" data-key="retentionProductType" data-group="status" placeholder="如 定期存款 / 基金 / 保险 / 理财 / 信托" />
+        </div>
+        <div class="two-col">
+          <div class="form-row"><label class="flabel">留存填报日期</label>
+            <input class="finput" type="date" data-key="retentionReportDate" data-group="status" />
+          </div>
+          <div class="form-row"><label class="flabel">留存量 (¥)</label>
+            <input class="finput" data-key="retentionAmount" data-group="status" placeholder="已留存资金量" type="number" />
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="form-row"><label class="flabel">他行VIP潜力</label>
+            <select class="finput" data-key="vipPotential" data-group="status">
+              <option value="">请选择</option>
+              <option>高</option><option>中</option><option>低</option><option>未知</option>
+            </select>
+          </div>
+          <div class="form-row"><label class="flabel">风险偏好</label>
+            <select class="finput" data-key="riskPreference" data-group="status">
+              <option value="">请选择</option>
+              <option>保守型</option><option>稳健型</option><option>平衡型</option>
+              <option>进取型</option><option>激进型</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="flabel">备注</label>
+          <textarea class="finput ftextarea" data-key="remark" data-group="status" placeholder="补充说明、跟进要点、注意事项……"></textarea>
+        </div>
+      </div>
+
+      <!-- 按钮区 -->
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-ghost" data-action="saveDraft">存草稿</button>
+        <button class="btn btn-primary" data-action="submit">保存客户</button>
+      </div>
+      <div class="btn-row" id="delRow" style="display:none;margin-top:8px">
+        <button class="btn btn-danger" data-action="del">删除此客户</button>
+      </div>
+    </div>
+
+    <!-- ========== 记录 TAB ========== -->
+    <div class="tab-content" id="tabRecords" style="display:none">
+      <div class="card" style="padding:12px 18px">
+        <div class="section-title" style="margin-bottom:4px">填报记录</div>
+        <div class="muted">按日期倒序 · 搜索 · 长按删除</div>
+      </div>
+      <div class="card" style="padding:10px 14px;margin-bottom:10px">
+        <div class="filter-bar" style="margin:0">
+          <input class="filter-input" id="recSearch" placeholder="搜索姓名/手机号/编号……" />
+          <button class="mini-btn" data-action="clearRecSearch">清除</button>
+        </div>
+      </div>
+      <div id="recList"></div>
+    </div>
+
+    <!-- ========== 统计 TAB ========== -->
+    <div class="tab-content" id="tabStats" style="display:none">
+      <div class="card" style="padding:12px 18px">
+        <div class="section-title" style="margin-bottom:4px">数据统计</div>
+        <div class="muted">实时汇总 · 点击卡片查看明细</div>
+      </div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="card" style="margin-top:10px">
+        <div class="subline"><span>渠道分布</span><span class="muted" id="myChannelCount"></span></div>
+        <div id="myChannelStats"></div>
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-ghost" data-action="exportMyCSV">导出我的 CSV</button>
+        <button class="btn btn-ghost" data-action="uploadMine">上传我的数据</button>
+      </div>
+    </div>
+
+    <!-- ========== 底部导航栏 ========== -->
+    <div class="tabbar">
+      <div class="tabbar-item active" data-tab="fill">
+        <div class="tabbar-icon">📝</div>
+        <div class="tabbar-label">填报</div>
+      </div>
+      <div class="tabbar-item" data-tab="records">
+        <div class="tabbar-icon">📋</div>
+        <div class="tabbar-label">记录</div>
+      </div>
+      <div class="tabbar-item" data-tab="stats">
+        <div class="tabbar-icon">📊</div>
+        <div class="tabbar-label">统计</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-form">
+  <div class="page">
+    <div class="card topbar">
+      <div class="topbar-title" id="formTitle">新建客户</div>
+      <div class="muted" id="qrTip" style="display:none">通过二维码进入 · 自动归档到「<span id="qrTipName"></span>」名下</div>
+    </div>
+
+    <!-- 分区1: 客户基础信息 -->
+    <div class="card">
+      <div class="section-title">客户基础信息</div>
+      <div class="two-col">
+        <div class="form-row"><div class="label">姓名<span class="req">*</span></div>
+          <input data-key="name" data-group="basic" placeholder="客户姓名" />
+        </div>
+        <div class="form-row"><div class="label">客户号<span class="req">*</span></div>
+          <input data-key="clientNo" data-group="basic" placeholder="如 K2025001" />
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="form-row"><div class="label">托管金额 (¥)</div>
+          <input data-key="managedAmount" data-group="basic" placeholder="如 500000" type="number" />
+        </div>
+        <div class="form-row"><div class="label">经办人<span class="req">*</span></div>
+          <input data-key="handler" data-group="basic" placeholder="经办人姓名" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 分区2: 时间节点信息 -->
+    <div class="card">
+      <div class="section-title">时间节点信息</div>
+      <div class="two-col">
+        <div class="form-row"><div class="label">登记日期</div>
+          <input type="date" data-key="registerDate" data-group="timeNodes" />
+        </div>
+        <div class="form-row"><div class="label">开卡日期</div>
+          <input type="date" data-key="cardDate" data-group="timeNodes" />
+        </div>
+      </div>
+      <div class="form-row"><div class="label">预计入账日期</div>
+        <input type="date" data-key="expectedDepositDate" data-group="timeNodes" />
+      </div>
+      <div class="form-row"><div class="label">入账描述</div>
+        <textarea data-key="depositDesc" data-group="timeNodes" placeholder="如 理财到期转入 · 他行资金归集 · 预计金额 200万"></textarea>
+      </div>
+    </div>
+
+    <!-- 分区3: 获客与转介信息 -->
+    <div class="card">
+      <div class="section-title">获客与转介信息</div>
+      <div class="two-col">
+        <div class="form-row"><div class="label">获客方式</div>
+          <select data-key="channel" data-group="acquisition">
+            <option value="">请选择</option>
+            <option>陌拜</option><option>电销</option><option>微信</option>
+            <option>抖音/快手</option><option>小红书</option><option>转介绍</option>
+            <option>渠道合作</option><option>营业厅到访</option><option>其他</option>
+          </select>
+        </div>
+        <div class="form-row"><div class="label">获客人</div>
+          <input data-key="acquirer" data-group="acquisition" placeholder="获客员工姓名" />
+        </div>
+      </div>
+      <div class="form-row"><div class="label">转介理财经理</div>
+        <input data-key="referralManager" data-group="acquisition" placeholder="转介绍方理财经理" />
+      </div>
+      <div class="two-col">
+        <div class="form-row"><div class="label">认领状态</div>
+          <select data-key="claimStatus" data-group="acquisition">
+            <option value="">请选择</option>
+            <option>已认领</option><option>未认领</option><option>无需认领</option>
+          </select>
+        </div>
+        <div class="form-row"><div class="label">认领日期</div>
+          <input type="date" data-key="claimDate" data-group="acquisition" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 分区4: 状态与留存明细 -->
+    <div class="card">
+      <div class="section-title">状态与留存明细</div>
+      <div class="two-col">
+        <div class="form-row"><div class="label">当前状态</div>
+          <select data-key="currentStatus" data-group="status">
+            <option value="">请选择</option>
+            <option>已签约</option><option>高意向</option><option>跟进中</option>
+            <option>已流失</option><option>观望中</option>
+          </select>
+        </div>
+        <div class="form-row"><div class="label">AUM (¥)</div>
+          <input data-key="aum" data-group="status" placeholder="资产管理规模" type="number" />
+        </div>
+      </div>
+      <div class="form-row"><div class="label">留存产品类型</div>
+        <input data-key="retentionProductType" data-group="status" placeholder="如 定期存款 / 基金 / 保险 / 理财 / 信托" />
+      </div>
+      <div class="two-col">
+        <div class="form-row"><div class="label">留存填报日期</div>
+          <input type="date" data-key="retentionReportDate" data-group="status" />
+        </div>
+        <div class="form-row"><div class="label">留存量 (¥)</div>
+          <input data-key="retentionAmount" data-group="status" placeholder="已留存资金量" type="number" />
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="form-row"><div class="label">他行VIP潜力</div>
+          <select data-key="vipPotential" data-group="status">
+            <option value="">请选择</option>
+            <option>高</option><option>中</option><option>低</option><option>未知</option>
+          </select>
+        </div>
+        <div class="form-row"><div class="label">风险偏好</div>
+          <select data-key="riskPreference" data-group="status">
+            <option value="">请选择</option>
+            <option>保守型</option><option>稳健型</option><option>平衡型</option>
+            <option>进取型</option><option>激进型</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="label">备注</div>
+        <textarea data-key="remark" data-group="status" placeholder="补充说明、跟进要点、注意事项……"></textarea>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:12rpx">
+      <button class="btn btn-ghost" data-action="saveDraft">存草稿</button>
+      <button class="btn btn-primary" data-action="submit">保存客户</button>
+    </div>
+    <div class="btn-row" id="delRow" style="display:none">
+      <button class="btn btn-danger" data-action="del">删除此客户</button>
+    </div>
+
+    <div class="muted" style="text-align:center; margin:30rpx 0 60rpx">
+      数据已自动保存在本机 localStorage,刷新浏览器不会丢失
+    </div>
+  </div>
+</template>
+
+<template id="tpl-manager">
+  <div class="page">
+    <div class="top-banner">
+      <div class="t1">管理员视图</div>
+      <div class="t2">实时监控团队业绩 · 一键导出全量数据</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="num" id="mKpiStaffs">0</div><div class="label">员工数</div></div>
+      <div class="kpi"><div class="num" id="mKpiClients">0</div><div class="label">客户总量</div></div>
+      <div class="kpi"><div class="num" id="mKpiToday">0</div><div class="label">今日新增</div></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="num" id="mKpiSigned">0</div><div class="label">已签约</div></div>
+      <div class="kpi"><div class="num" id="mKpiIntent">0</div><div class="label">高意向</div></div>
+      <div class="kpi"><div class="num" id="mKpiFollowing">0</div><div class="label">跟进中</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">数据导出</div>
+      <div class="muted" style="margin-bottom:16rpx">点击按钮即可保存为本地 CSV</div>
+      <button class="btn btn-primary btn-block" data-action="exportAllCSV">导出全量 CSV</button>
+      <div class="btn-row" style="margin-top:16rpx">
+        <button class="btn btn-ghost" data-action="exportStaffSummary">导出员工业绩</button>
+        <button class="btn btn-ghost" data-action="generateQRCode">生成员工二维码</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="subline"><span>员工业绩榜</span><span class="muted">点击查看详情</span></div>
+      <div id="staffSummary"></div>
+    </div>
+
+    <div class="card">
+      <div class="subline"><span>获客渠道分布</span><span class="muted" id="channelCount"></span></div>
+      <div id="channelStats"></div>
+    </div>
+
+    <div class="card">
+      <div class="subline"><span>全部客户记录</span><span class="muted">共 <span id="mAllCount">0</span> 条</span></div>
+      <div class="filter-bar">
+        <input class="filter-input" id="mKw" placeholder="按姓名/手机号/编号/员工搜索" />
+        <button class="mini-btn" data-action="clearKw">清除</button>
+      </div>
+      <div id="allList"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:18rpx">
+      <button class="btn btn-ghost" data-action="logout">退出管理员</button>
+    </div>
+
+    <!-- 二维码弹层 -->
+    <div class="modal" id="qrModal" style="display:none">
+      <div class="modal-mask"></div>
+      <div class="modal-body">
+        <div class="modal-title">员工专属入口</div>
+        <p class="muted">扫描对应二维码后,员工将自动登录并跳转到新建表单。可复制链接或保存二维码图片。</p>
+        <div id="qrList"></div>
+        <button class="btn btn-primary btn-block" data-action="closeQr" style="margin-top:18rpx">关闭</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-detail">
+  <div class="page">
+    <div class="card">
+      <div class="section-title">客户详情</div>
+      <div id="detailContent"></div>
+      <div class="btn-row" style="margin-top:18rpx">
+        <button class="btn btn-ghost" data-action="back">返回</button>
+        <button class="btn btn-primary" data-action="editFromDetail">编辑此客户</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script src="qrcode.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

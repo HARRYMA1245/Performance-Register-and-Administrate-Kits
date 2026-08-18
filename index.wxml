@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="hero">
+    <view class="logo">📒</view>
+    <view class="hero-title">客户档案管家</view>
+    <view class="hero-sub">团队协作 · 客户跟进 · 数据沉淀</view>
+  </view>
+
+  <!-- 员工登录 -->
+  <view class="role-card">
+    <view class="title">我是员工</view>
+    <view class="desc">录入客户资料、跟进记录、数据自动同步到总部</view>
+    <view class="login-field">
+      <input class="login-input" placeholder="姓名(管理员已为你创建)" value="{{staffName}}" bindinput="onStaffName" />
+    </view>
+    <view class="login-field">
+      <input class="login-input" password placeholder="登录密码" value="{{staffPwd}}" bindinput="onStaffPwd" />
+    </view>
+    <button class="btn btn-primary btn-block" bindtap="enterStaff" disabled="{{loading}}">{{loading ? '登录中…' : '进入工作台'}}</button>
+    <view class="muted" style="margin-top:14rpx">没有账号?请联系管理员在后台创建</view>
+  </view>
+
+  <!-- 管理员登录 -->
+  <view class="role-card">
+    <view class="title">我是管理员</view>
+    <view class="desc">团队业绩、员工账号管理、数据导出</view>
+    <view class="login-field" wx:if="{{showAdminPwd}}">
+      <input class="login-input" password placeholder="管理密码" value="{{adminPwd}}" bindinput="onAdminPwd" focus="{{showAdminPwd}}" />
+    </view>
+    <button class="btn btn-ghost btn-block" bindtap="enterManager">{{showAdminPwd ? '确认进入管理后台' : '进入管理后台'}}</button>
+  </view>
+
+  <view class="card">
+    <view class="section-title">扫码进入</view>
+    <view class="muted" style="line-height:1.7">
+      · 员工扫管理员生成的专属小程序码,可免密直接进入填报页<view style="height:8rpx"/>
+      · 登录后可点右上角「···」→「添加到桌面」,像普通 App 一样使用
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">云服务状态</view>
+    <view class="muted" style="line-height:1.7">
+      后端:微信云开发(无需自建服务器)<view style="height:6rpx"/>
+      状态:{{serverStatus}}
+    </view>
+    <button class="btn btn-ghost btn-block" style="margin-top:14rpx" bindtap="checkServer">重新检测连接</button>
+  </view>
+</view>

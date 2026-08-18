@@ -1,0 +1,8 @@
+{
+  "adminPassword": "Admin@123",
+  "tokenSecret": "63878f0b26f49bfc88c3b4478cccec02",
+  "wechat": {
+    "appid": "wx33a0b054b2960d70",
+    "secret": ""
+  }
+}

@@ -1,0 +1,191 @@
+<view class="container">
+  <!-- 顶部操作条 -->
+  <view class="card topbar">
+    <view class="topbar-title">{{readOnly ? '客户档案(管理员查看)' : (editing ? '编辑客户' : '新建客户')}}</view>
+    <view class="muted" wx:if="{{fromQrcode}}">通过二维码进入 · 自动归档到「{{staffName}}」名下</view>
+    <view class="muted" wx:if="{{editing && staffName}}">引入员工: {{staffName}}</view>
+  </view>
+
+  <!-- 分区1: 客户基础信息 -->
+  <view class="card">
+    <view class="section-title">客户基础信息</view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">姓名<text class="req">*</text></view>
+        <input value="{{basic.name}}" data-key="name" bindinput="onBasicInput" placeholder="客户姓名" disabled="{{readOnly}}" />
+      </view>
+      <view class="form-row">
+        <view class="label">客户号<text class="req">*</text></view>
+        <input value="{{basic.clientNo}}" data-key="clientNo" bindinput="onBasicInput" placeholder="如 K2025001" disabled="{{readOnly}}" />
+      </view>
+    </view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">托管金额(¥)</view>
+        <input type="number" value="{{basic.managedAmount}}" data-key="managedAmount" bindinput="onBasicInput" placeholder="如 500000" disabled="{{readOnly}}" />
+      </view>
+      <view class="form-row">
+        <view class="label">经办客户经理<text class="req">*</text></view>
+        <input value="{{basic.handler}}" data-key="handler" bindinput="onBasicInput" placeholder="经办客户经理姓名" disabled="{{readOnly}}" />
+      </view>
+    </view>
+    <view class="form-row">
+      <view class="label">客户类型</view>
+      <picker mode="selector" range="{{clientTypeOptions}}" value="{{clientTypeIndex}}" bindchange="onClientTypeChange" disabled="{{readOnly}}">
+        <view class="picker {{basic.clientType ? '' : 'placeholder'}}">{{basic.clientType || '请选择'}}</view>
+      </picker>
+      <view class="muted" wx:if="{{basic.clientType === '其他'}}" style="margin-top:6rpx">选择"其他"请在备注中说明具体情况</view>
+    </view>
+  </view>
+
+  <!-- 分区2: 时间节点信息 -->
+  <view class="card">
+    <view class="section-title">时间节点信息</view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">登记日期</view>
+        <picker mode="date" value="{{timeNodes.registerDate}}" bindchange="onDateChange" data-key="registerDate" disabled="{{readOnly}}">
+          <view class="picker {{timeNodes.registerDate ? '' : 'placeholder'}}">{{timeNodes.registerDate || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="label">开卡日期</view>
+        <picker mode="date" value="{{timeNodes.cardDate}}" bindchange="onDateChange" data-key="cardDate" disabled="{{readOnly}}">
+          <view class="picker {{timeNodes.cardDate ? '' : 'placeholder'}}">{{timeNodes.cardDate || '请选择'}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">预计入账日期</view>
+        <picker mode="date" value="{{timeNodes.expectedDepositDate}}" bindchange="onDateChange" data-key="expectedDepositDate" disabled="{{readOnly}}">
+          <view class="picker {{timeNodes.expectedDepositDate ? '' : 'placeholder'}}">{{timeNodes.expectedDepositDate || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="label">限额失效日期</view>
+        <picker mode="date" value="{{timeNodes.limitExpiryDate}}" bindchange="onDateChange" data-key="limitExpiryDate" disabled="{{readOnly}}">
+          <view class="picker {{timeNodes.limitExpiryDate ? '' : 'placeholder'}}">{{timeNodes.limitExpiryDate || '请选择'}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="form-row">
+      <view class="label">入账时间描述</view>
+      <textarea value="{{timeNodes.depositDesc}}" data-key="depositDesc" bindinput="onTimeInput" placeholder="默认无;如 理财到期转入 · 他行资金归集 · 预计金额 200万" disabled="{{readOnly}}" />
+    </view>
+  </view>
+
+  <!-- 分区3: 获客与转介信息 -->
+  <view class="card">
+    <view class="section-title">获客与转介信息</view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">获客方式</view>
+        <picker mode="selector" range="{{acqOptions}}" value="{{acqIndex}}" bindchange="onAcqChange" disabled="{{readOnly}}">
+          <view class="picker {{acquisition.channel ? '' : 'placeholder'}}">{{acquisition.channel || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="label">链家签约经理</view>
+        <input value="{{acquisition.acquirer}}" data-key="acquirer" bindinput="onAcqInputText" placeholder="链家签约经理姓名" disabled="{{readOnly}}" />
+      </view>
+    </view>
+    <view class="form-row">
+      <view class="label">转介理财经理</view>
+      <input value="{{acquisition.referralManager}}" data-key="referralManager" bindinput="onAcqInputText" placeholder="转介绍方理财经理" disabled="{{readOnly}}" />
+    </view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">认领状态</view>
+        <picker mode="selector" range="{{claimStatusOptions}}" value="{{claimStatusIndex}}" bindchange="onClaimStatusChange" disabled="{{readOnly}}">
+          <view class="picker {{acquisition.claimStatus ? '' : 'placeholder'}}">{{acquisition.claimStatus || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="label">认领日期</view>
+        <picker mode="date" value="{{acquisition.claimDate}}" bindchange="onAcqDateChange" data-key="claimDate" disabled="{{readOnly}}">
+          <view class="picker {{acquisition.claimDate ? '' : 'placeholder'}}">{{acquisition.claimDate || '请选择'}}</view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分区4: 状态与留存明细 -->
+  <view class="card">
+    <view class="section-title">状态与留存明细</view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">当前状态</view>
+        <picker mode="selector" range="{{statusOptions}}" value="{{currentStatusIndex}}" bindchange="onCurrentStatusChange" disabled="{{readOnly}}">
+          <view class="picker {{status.currentStatus ? '' : 'placeholder'}}">{{status.currentStatus || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="label">AUM(¥)</view>
+        <input type="number" value="{{status.aum}}" data-key="aum" bindinput="onStatusInput" placeholder="资产管理规模" disabled="{{readOnly}}" />
+      </view>
+    </view>
+    <view class="form-row">
+      <view class="label">留存产品类型</view>
+      <picker mode="selector" range="{{retentionProductOptions}}" value="{{retentionProductIndex}}" bindchange="onRetentionProductChange" disabled="{{readOnly}}">
+        <view class="picker {{status.retentionProductType ? '' : 'placeholder'}}">{{status.retentionProductType || '请选择'}}</view>
+      </picker>
+    </view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">留存填报日期</view>
+        <picker mode="date" value="{{status.retentionReportDate}}" bindchange="onStatusDateChange" data-key="retentionReportDate" disabled="{{readOnly}}">
+          <view class="picker {{status.retentionReportDate ? '' : 'placeholder'}}">{{status.retentionReportDate || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="label">留存量(¥)</view>
+        <input type="number" value="{{status.retentionAmount}}" data-key="retentionAmount" bindinput="onStatusInput" placeholder="已留存资金量" disabled="{{readOnly}}" />
+      </view>
+    </view>
+    <view class="two-col">
+      <view class="form-row">
+        <view class="label">他行VIP潜力</view>
+        <picker mode="selector" range="{{vipOptions}}" value="{{vipPotentialIndex}}" bindchange="onVipPotentialChange" disabled="{{readOnly}}">
+          <view class="picker {{status.vipPotential ? '' : 'placeholder'}}">{{status.vipPotential || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <view class="label">风险偏好</view>
+        <picker mode="selector" range="{{riskOptions}}" value="{{riskPreferenceIndex}}" bindchange="onRiskPreferenceChange" disabled="{{readOnly}}">
+          <view class="picker {{status.riskPreference ? '' : 'placeholder'}}">{{status.riskPreference || '请选择'}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="form-row">
+      <view class="label">备注</view>
+      <textarea value="{{status.remark}}" data-key="remark" bindinput="onStatusInput" placeholder="补充说明、跟进要点、注意事项……" disabled="{{readOnly}}" />
+    </view>
+  </view>
+
+  <!-- 分区5: 工作进度(六项工序,员工点击完成) -->
+  <view class="card">
+    <view class="subline">
+      <text class="section-title" style="margin:0">工作进度</text>
+      <text class="prog-count {{progressDone === 6 ? 'full' : ''}}">{{progressDone}}/6</text>
+    </view>
+    <view class="muted" style="margin-bottom:10rpx">{{readOnly ? '员工工序完成情况(只读)' : '完成一项点一项,自动保存'}}</view>
+    <view class="prog-row {{item.done ? 'done' : ''}}" wx:for="{{progressList}}" wx:key="key"
+          data-key="{{item.key}}" bindtap="onToggleProgress">
+      <view class="prog-check {{item.done ? 'on' : ''}}">{{item.done ? '✓' : ''}}</view>
+      <view class="prog-label">{{item.label}}</view>
+      <view class="prog-state">{{item.done ? '已完成' : '未完成'}}</view>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <block wx:if="{{!readOnly}}">
+    <view class="btn-row">
+      <button class="btn btn-ghost" bindtap="saveDraft">存草稿</button>
+      <button class="btn btn-primary" bindtap="submit">保存客户</button>
+    </view>
+    <view class="btn-row" wx:if="{{editing}}">
+      <button class="btn btn-danger" bindtap="del">删除此客户</button>
+    </view>
+  </block>
+</view>

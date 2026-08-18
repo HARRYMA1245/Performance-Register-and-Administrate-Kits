@@ -1,0 +1,295 @@
+<view class="container">
+  <view class="top-banner">
+    <view class="t1">管理员视图</view>
+    <view class="t2">实时监控团队业绩 · 一键导出全量数据</view>
+  </view>
+
+  <view class="sync-bar">{{serverStatus}}</view>
+
+  <!-- ========== 本月概览 ========== -->
+  <view class="card month-card">
+    <view class="subline">
+      <text>本月概览</text>
+      <text class="muted">按登记日期统计</text>
+    </view>
+    <view class="month-grid">
+      <view class="mcell"><view class="mnum">{{monthStats.total}}</view><view class="mlab">业务总数</view></view>
+      <view class="mcell"><view class="mnum green">{{monthStats.retained}}</view><view class="mlab">留存</view></view>
+      <view class="mcell"><view class="mnum amber">{{monthStats.todo}}</view><view class="mlab">待办</view></view>
+      <view class="mcell"><view class="mnum green">{{monthStats.done}}</view><view class="mlab">全部完成</view></view>
+      <view class="mcell"><view class="mnum blue">{{monthStats.doing}}</view><view class="mlab">进行中</view></view>
+      <view class="mcell"><view class="mnum gray">{{monthStats.notStarted}}</view><view class="mlab">未开始</view></view>
+    </view>
+  </view>
+
+  <!-- ========== 工作台(按员工分类) ========== -->
+  <view class="card">
+    <view class="subline">
+      <text>工作台 · 全部客户业务</text>
+      <text class="muted">{{wbList.length}} 条</text>
+    </view>
+    <scroll-view scroll-x class="chips" enhanced show-scrollbar="{{false}}">
+      <view class="chip {{wbFilter === item.key ? 'on' : ''}}"
+            wx:for="{{wbTabs}}" wx:key="key"
+            data-key="{{item.key}}" bindtap="onWbFilter">
+        {{item.label}}<text class="chip-n">{{item.count}}</text>
+      </view>
+    </scroll-view>
+    <view class="filter-bar">
+      <input class="filter-input" placeholder="按姓名/客户号/经办人/员工搜索" value="{{keyword}}" bindinput="onKeywordInput" />
+      <button class="mini-btn" bindtap="clearKeyword">清除</button>
+    </view>
+
+    <block wx:if="{{wbList.length}}">
+      <view class="list-item" wx:for="{{wbList}}" wx:key="id" bindtap="openDetail" data-id="{{item.id}}">
+        <view style="flex:1;min-width:0">
+          <view style="font-weight:600">
+            <text class="tag {{item.tagClass}}">{{item.conditionTag}}</text>
+            {{item.basic.name}}
+            <text class="muted" style="font-size:22rpx;margin-left:8rpx">by {{item.staffName}}</text>
+            <text class="prog-badge {{item.progressDone === 6 ? 'full' : ''}}">{{item.progressDone}}/6</text>
+          </view>
+          <view class="meta">{{item.basic.clientNo || '无客户号'}} · 托管 ¥{{item.managedText}} · 经办 {{item.basic.handler || '—'}}</view>
+        </view>
+        <view class="meta" style="text-align:right">{{item.updateTimeText}}</view>
+      </view>
+    </block>
+    <view class="empty" wx:else>该分类下暂无客户业务</view>
+  </view>
+
+  <!-- ========== 统计模块 ========== -->
+  <!-- 顶部 6 项指标 -->
+  <view class="kpi-grid" wx:if="{{dash}}">
+    <view class="kpi"><view class="num">{{dash.top.totalCount}}</view><view class="label">总登记笔数</view></view>
+    <view class="kpi"><view class="num">{{dash.top.retainedCount}}</view><view class="label">留存笔数</view></view>
+    <view class="kpi"><view class="num">{{dash.top.pendingCount}}</view><view class="label">待处理数</view></view>
+  </view>
+  <view class="kpi-grid" wx:if="{{dash}}">
+    <view class="kpi"><view class="num">{{topStatsText.totalManaged}}</view><view class="label">托管总金额</view></view>
+    <view class="kpi"><view class="num">{{topStatsText.retainedAum}}</view><view class="label">留存总AUM</view></view>
+    <view class="kpi"><view class="num">{{dash.top.retentionRate}}%</view><view class="label">留存率</view></view>
+  </view>
+
+  <!-- 资金转化柱状图 -->
+  <view class="card" wx:if="{{dash}}">
+    <view class="section-title">资金转化</view>
+    <view class="frow" wx:for="{{dash.funnel}}" wx:key="label">
+      <view class="flabel">{{item.label}}</view>
+      <view class="ftrack"><view class="ffill" style="width:{{item.widthPct}}%"></view></view>
+      <view class="fval">¥{{item.valueText}}<text wx:if="{{item.pct}}" class="fpct"> {{item.pct}}</text></view>
+    </view>
+    <view class="muted" style="margin-top:8rpx">百分比 = 该项 ÷ 登记托管金额</view>
+  </view>
+
+  <!-- 近八周资金变化趋势 -->
+  <view class="card" wx:if="{{dash}}">
+    <view class="section-title">近八周资金变化趋势</view>
+    <view class="linechart" style="width:{{dash.trend.width}}px;height:{{dash.trend.height}}px">
+      <view wx:for="{{dash.trend.segments}}" wx:key="index" class="lseg"
+            style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.len}}px;transform:rotate({{item.angle}}deg);background:{{item.color}}"></view>
+      <block wx:for="{{dash.trend.points}}" wx:key="index">
+        <view class="ldot" style="left:{{item.x - 4}}px;top:{{item.y - 4}}px;background:{{item.color}}"></view>
+        <view class="llab" style="left:{{item.lx}}px;top:{{item.ly}}px">{{item.text}}</view>
+      </block>
+    </view>
+    <view class="xaxis" style="width:{{dash.trend.width}}px">
+      <text wx:for="{{dash.trend.labels}}" wx:key="index">{{item}}</text>
+    </view>
+    <view class="legend">
+      <view class="lg-item" wx:for="{{dash.trendLegend}}" wx:key="name">
+        <view class="lg-dot" style="background:{{item.color}}"></view>{{item.name}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 托管金额 vs 留存AUM -->
+  <view class="card" wx:if="{{dash}}">
+    <view class="section-title">托管金额 vs 留存AUM</view>
+    <view class="linechart" style="width:{{dash.compare.width}}px;height:{{dash.compare.height}}px">
+      <view wx:for="{{dash.compare.segments}}" wx:key="index" class="lseg"
+            style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.len}}px;transform:rotate({{item.angle}}deg);background:{{item.color}}"></view>
+      <block wx:for="{{dash.compare.points}}" wx:key="index">
+        <view class="ldot" style="left:{{item.x - 4}}px;top:{{item.y - 4}}px;background:{{item.color}}"></view>
+        <view class="llab" style="left:{{item.lx}}px;top:{{item.ly}}px">{{item.text}}</view>
+      </block>
+    </view>
+    <view class="xaxis" style="width:{{dash.compare.width}}px">
+      <text wx:for="{{dash.compare.labels}}" wx:key="index">{{item}}</text>
+    </view>
+    <view class="legend">
+      <view class="lg-item" wx:for="{{dash.compareLegend}}" wx:key="name">
+        <view class="lg-dot" style="background:{{item.color}}"></view>{{item.name}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 笔数趋势 -->
+  <view class="card" wx:if="{{dash}}">
+    <view class="section-title">笔数趋势</view>
+    <view class="bchart">
+      <view class="bgroup" wx:for="{{dash.countChart}}" wx:key="label">
+        <view class="bcols">
+          <view class="bcol" wx:for="{{item.bars}}" wx:for-item="bar" wx:key="name">
+            <text class="bval" wx:if="{{bar.value}}">{{bar.value}}</text>
+            <view class="bbar" style="height:{{bar.h}}%;background:{{bar.color}};min-height:{{bar.value ? '8rpx' : '0'}}"></view>
+          </view>
+        </view>
+        <text class="bx">{{item.label}}</text>
+      </view>
+    </view>
+    <view class="legend">
+      <view class="lg-item" wx:for="{{dash.countLegend}}" wx:key="name">
+        <view class="lg-dot" style="background:{{item.color}}"></view>{{item.name}}
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== 待办事项(全团队) ========== -->
+  <view class="card todo-card">
+    <view class="subline">
+      <text>待办事项(全团队)</text>
+      <text class="muted">{{todos.length}} 项</text>
+    </view>
+    <scroll-view scroll-x class="chips" enhanced show-scrollbar="{{false}}">
+      <view class="chip {{todoFilter === item.key ? 'on' : ''}}"
+            wx:for="{{todoTypes}}" wx:key="key"
+            data-key="{{item.key}}" bindtap="onTodoFilter">
+        {{item.label}}<text wx:if="{{todoCounts[item.key]}}" class="chip-n">{{todoCounts[item.key]}}</text>
+      </view>
+    </scroll-view>
+    <block wx:if="{{filteredTodos.length}}">
+      <view class="todo-item" wx:for="{{filteredTodos}}" wx:key="index"
+            data-id="{{item.clientId}}" bindtap="openTodo">
+        <view class="todo-head">
+          <text class="tag {{item.cls}}">{{item.typeLabel}}</text>
+          <text class="todo-name">{{item.clientName}}</text>
+          <text class="todo-staff">by {{item.staffName}}</text>
+          <text class="todo-date">{{item.date}}</text>
+        </view>
+        <view class="meta">{{item.desc}}</view>
+      </view>
+    </block>
+    <view class="empty" wx:else style="padding:28rpx">暂无待办 🎉</view>
+  </view>
+
+  <!-- 员工账号管理 -->
+  <view class="card">
+    <view class="section-title">员工账号</view>
+    <view class="muted" style="margin-bottom:14rpx">创建后员工即可用「姓名+密码」登录;重复创建同名员工 = 重置密码</view>
+    <view class="acct-row" wx:for="{{staffAccounts}}" wx:key="id">
+      <view class="acct-name">{{item.name}}</view>
+      <view class="muted">{{item.id}}</view>
+      <button class="mini-btn danger" bindtap="deleteStaff" data-id="{{item.id}}" data-name="{{item.name}}">删除</button>
+    </view>
+    <view class="empty" wx:if="{{!staffAccounts.length}}" style="padding:20rpx">还没有员工账号</view>
+    <view class="acct-form">
+      <input class="login-input" placeholder="员工姓名" value="{{newStaffName}}" bindinput="onNewStaffName" />
+      <input class="login-input" placeholder="登录密码(8位以上,含大小写+特殊字符)" value="{{newStaffPwd}}" bindinput="onNewStaffPwd" />
+      <button class="btn btn-primary" bindtap="createStaff">创建 / 重置</button>
+    </view>
+  </view>
+
+  <!-- 数据导出 -->
+  <view class="card">
+    <view class="section-title">数据导出</view>
+    <view class="btn-row">
+      <button class="btn btn-primary" bindtap="exportAllCSV">导出全量 CSV</button>
+    </view>
+    <view class="btn-row" style="margin-top:16rpx">
+      <button class="btn btn-ghost" bindtap="exportStaffSummary">导出员工业绩</button>
+      <button class="btn btn-ghost" bindtap="generateQRCode">员工小程序码</button>
+    </view>
+  </view>
+
+  <!-- 数据管理 -->
+  <view class="card">
+    <view class="section-title">数据管理</view>
+    <view class="muted" style="margin-bottom:14rpx">对服务器上的全量数据操作,请谨慎</view>
+    <view class="btn-row">
+      <button class="btn btn-ghost" bindtap="clearDemo">清空演示数据</button>
+      <button class="btn btn-danger" bindtap="resetAll">重置全部数据</button>
+    </view>
+  </view>
+
+  <!-- 员工业绩榜 -->
+  <view class="card">
+    <view class="subline">
+      <text>员工业绩榜</text>
+      <text class="muted">点击查看详情</text>
+    </view>
+    <block wx:if="{{staffSummary.length}}">
+      <view class="staff-row" wx:for="{{staffSummary}}" wx:key="id" bindtap="drillStaff" data-sid="{{item.id}}">
+        <view class="staff-rank">{{index + 1}}</view>
+        <view class="staff-info">
+          <view class="staff-name">{{item.name}}</view>
+          <view class="muted">{{item.recentText}}</view>
+        </view>
+        <view class="staff-meta">
+          <view class="staff-num">{{item.count}}</view>
+          <view class="muted">客户数</view>
+        </view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="empty">暂无员工业绩</view>
+    </block>
+  </view>
+
+  <!-- 客户获客渠道分布 -->
+  <view class="card">
+    <view class="subline">
+      <text>获客渠道分布</text>
+      <text class="muted">{{channelStats.length}} 个渠道</text>
+    </view>
+    <view class="bar-row" wx:for="{{channelStats}}" wx:key="channel">
+      <view class="bar-label">{{item.channel}}</view>
+      <view class="bar-track">
+        <view class="bar-fill" style="width: {{item.percent}}%"></view>
+      </view>
+      <view class="bar-num">{{item.count}}</view>
+    </view>
+    <view class="empty" wx:if="{{!channelStats.length}}" style="padding:20rpx">暂无渠道数据</view>
+  </view>
+
+  <view class="btn-row" style="margin-top:18rpx">
+    <button class="btn btn-ghost" bindtap="openPwd">修改管理密码</button>
+    <button class="btn btn-ghost" bindtap="logout">退出管理员</button>
+  </view>
+
+  <!-- 修改管理密码弹窗 -->
+  <view class="qr-modal" wx:if="{{pwdVisible}}">
+    <view class="qr-mask" bindtap="closePwd"></view>
+    <view class="qr-panel">
+      <view class="qr-title">修改管理密码</view>
+      <view class="pwd-field">
+        <input class="pwd-input" password placeholder="原密码" value="{{oldPwd}}" bindinput="onOldPwd" />
+      </view>
+      <view class="pwd-field">
+        <input class="pwd-input" password placeholder="新密码(8位以上,含大小写+特殊字符)" value="{{newPwd}}" bindinput="onNewPwd" />
+      </view>
+      <view class="pwd-field">
+        <input class="pwd-input" password placeholder="确认新密码" value="{{newPwd2}}" bindinput="onNewPwd2" />
+      </view>
+      <view class="btn-row" style="margin-top:20rpx">
+        <button class="btn btn-ghost" bindtap="closePwd">取消</button>
+        <button class="btn btn-primary" bindtap="submitPwd" disabled="{{pwdLoading}}">{{pwdLoading ? '提交中…' : '确认修改'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 小程序码弹层 -->
+  <view class="qr-modal" wx:if="{{qrVisible}}">
+    <view class="qr-mask" bindtap="closeQr"></view>
+    <view class="qr-panel">
+      <view class="qr-title">员工专属小程序码</view>
+      <view class="muted" style="margin-bottom:10rpx">员工扫码后免密直达填报页;点图片可保存到相册</view>
+      <view class="qr-item" wx:for="{{qrList}}" wx:key="staffId">
+        <view class="qr-name">{{item.staffName}}</view>
+        <image wx:if="{{item.url}}" class="qr-img" src="{{item.url}}" mode="aspectFit" bindtap="saveQrImage" data-path="{{item.url}}"></image>
+        <view wx:elif="{{item.loading}}" class="qr-loading">生成中…</view>
+        <view wx:else class="qr-error">{{item.error || '生成失败'}}</view>
+      </view>
+      <button class="btn btn-primary btn-block" style="margin-top:18rpx" bindtap="closeQr">关闭</button>
+    </view>
+  </view>
+</view>

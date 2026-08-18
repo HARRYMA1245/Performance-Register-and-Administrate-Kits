@@ -1,0 +1,25 @@
+<view class="container">
+  <view class="hero">
+    <view class="logo">📲</view>
+    <view class="title">员工专属入口</view>
+    <view class="muted">已检测到管理员派发的身份信息</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">身份信息</view>
+    <view class="kv"><text class="k">角色</text><text class="v">{{roleText}}</text></view>
+    <view class="kv"><text class="k">员工编号</text><text class="v">{{sid}}</text></view>
+    <view class="kv"><text class="k">员工姓名</text><text class="v">{{sname}}</text></view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">建议操作</view>
+    <button class="btn btn-primary btn-block" bindtap="goForm">填写新客户档案</button>
+    <view style="height:18rpx" />
+    <button class="btn btn-ghost btn-block" bindtap="goMyList">查看我已录入的客户</button>
+  </view>
+
+  <view class="card">
+    <view class="muted">小提示: 微信扫码时会自动带上身份参数,点击「添加到桌面」可像 App 一样使用。添加路径:右上角「···」→「添加到桌面」。</view>
+  </view>
+</view>

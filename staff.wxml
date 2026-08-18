@@ -1,0 +1,111 @@
+<view class="container">
+  <view class="profile">
+    <view class="avatar">{{initial}}</view>
+    <view>
+      <view class="name">{{staffName}}</view>
+      <view class="muted">员工 · ID {{staffId}}</view>
+    </view>
+    <button class="mini-btn" bindtap="logout">退出登录</button>
+  </view>
+
+  <view class="sync-bar">{{syncStatus}}</view>
+
+  <view class="kpi-grid">
+    <view class="kpi">
+      <view class="num">{{mineCount}}</view>
+      <view class="label">我的客户</view>
+    </view>
+    <view class="kpi">
+      <view class="num">{{todayCount}}</view>
+      <view class="label">今日新增</view>
+    </view>
+    <view class="kpi">
+      <view class="num">{{signedCount}}</view>
+      <view class="label">已留存</view>
+    </view>
+  </view>
+
+  <!-- 待办事项 -->
+  <view class="card todo-card">
+    <view class="subline">
+      <text>待办事项</text>
+      <text class="muted">{{todos.length}} 项</text>
+    </view>
+    <scroll-view scroll-x class="chips" enhanced show-scrollbar="{{false}}">
+      <view class="chip {{todoFilter === item.key ? 'on' : ''}}"
+            wx:for="{{todoTypes}}" wx:key="key"
+            data-key="{{item.key}}" bindtap="onTodoFilter">
+        {{item.label}}<text wx:if="{{todoCounts[item.key]}}" class="chip-n">{{todoCounts[item.key]}}</text>
+      </view>
+    </scroll-view>
+    <block wx:if="{{filteredTodos.length}}">
+      <view class="todo-item" wx:for="{{filteredTodos}}" wx:key="index"
+            data-id="{{item.clientId}}" bindtap="openTodo">
+        <view class="todo-head">
+          <text class="tag {{item.cls}}">{{item.typeLabel}}</text>
+          <text class="todo-name">{{item.clientName}}</text>
+          <text class="todo-date">{{item.date}}</text>
+        </view>
+        <view class="meta">{{item.desc}}</view>
+      </view>
+    </block>
+    <view class="empty" wx:else style="padding:28rpx">暂无待办 🎉</view>
+  </view>
+
+  <view class="toolbar">
+    <view class="subline">
+      <text>客户列表</text>
+      <text class="muted">共 {{mineCount}} 条 · 仅自己可见</text>
+    </view>
+  </view>
+
+  <block wx:if="{{mineList.length > 0}}">
+    <view class="list-item" wx:for="{{mineList}}" wx:key="id" bindtap="openDetail" data-id="{{item.id}}">
+      <view>
+        <view style="font-weight:600">{{item.basic.name}}
+          <text class="prog-badge {{item.progressDone === 6 ? 'full' : ''}}">进度 {{item.progressDone}}/6</text>
+        </view>
+        <view class="meta">
+          <text class="tag {{item.tagClass}}">{{item.conditionTag}}</text>
+          {{item.basic.clientNo}} · 经办 {{item.basic.handler || '—'}}
+        </view>
+        <view class="meta" wx:if="{{item.amountText}}" style="color:#1f6feb">{{item.amountText}}</view>
+      </view>
+      <view class="meta">{{item.updateTimeText}}</view>
+    </view>
+  </block>
+  <block wx:else>
+    <view class="empty">还没有客户记录,点击右下角 + 开始第一条</view>
+  </block>
+
+  <view class="btn-row" style="margin-top:24rpx">
+    <button class="btn btn-ghost" bindtap="exportMyCSV">导出我的 CSV</button>
+    <button class="btn btn-ghost" bindtap="uploadMine">手动同步</button>
+  </view>
+  <view class="btn-row" style="margin-top:16rpx">
+    <button class="btn btn-ghost" bindtap="openPwd">修改密码</button>
+  </view>
+
+  <view class="fab" bindtap="addOne">＋</view>
+
+  <!-- 修改密码弹窗 -->
+  <view class="pwd-modal" wx:if="{{pwdVisible}}">
+    <view class="pwd-mask" bindtap="closePwd"></view>
+    <view class="pwd-panel">
+      <view class="pwd-title">修改密码</view>
+      <view class="pwd-field">
+        <input class="pwd-input" password placeholder="原密码" value="{{oldPwd}}" bindinput="onOldPwd" />
+      </view>
+      <view class="pwd-field">
+        <input class="pwd-input" password placeholder="新密码(8位以上,含大小写+特殊字符)" value="{{newPwd}}" bindinput="onNewPwd" />
+      </view>
+      <view class="pwd-field">
+        <input class="pwd-input" password placeholder="确认新密码" value="{{newPwd2}}" bindinput="onNewPwd2" />
+      </view>
+      <view class="btn-row" style="margin-top:20rpx">
+        <button class="btn btn-ghost" bindtap="closePwd">取消</button>
+        <button class="btn btn-primary" bindtap="submitPwd" disabled="{{pwdLoading}}">{{pwdLoading ? '提交中…' : '确认修改'}}</button>
+      </view>
+    </view>
+  </view>
+</view>
